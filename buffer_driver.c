@@ -3,50 +3,47 @@
 #include <linux/init.h>
 #include <linux/module.h>
 
-#define MAGOR 
-static const char device_name[] = "buffer-device";
+static struct file_operations buffer_driver_fops;
+
+static const int MAJOR = 44;
+static const char DEVICE_NAME[] = "buffer-device";
+
+static int CONTAINING_VALUE_LEN = 1024;
+static char containing_value[CONTAINING_VALUE_LEN] = {""};
+static ssize_t containing_value_len = 0;
 
 static int __init buffer_init(void)
 {
-    //register_chdev();
+    if (register_chrdev(MAJOR, DEVICE_NAME,
+                        &buffer_driver_fops))
+    {
+        printk(KERN_ERR, "buffer_driver: unable to get major %\d",MAJOR);
+        return -EIO;
+    }
     return 0;
 }
 
 static void __exit buffer_exit(void)
 {
+    unregister_chrdev(MAJOR, DEVICE_NAME);
     return;
 }
 
-
-ssize_t buffer_driver_read(struct file *f, char __user buf,
-                           size_t sz, loff_t *off)
+ssize_t buffer_driver_read(struct file *f, char __user *buf, size_t sz, loff_t *off)
 {
     return 0;
 }
 
-ssize_t buffer_driver_write(struct file *f, char __user buf,
-                           size_t sz, loff_t *off)
+ssize_t buffer_driver_write(struct file *f, const char __user *buf, size_t sz, loff_t *off)
 {
     return 0;
 }
 
-int buffer_driver_open(struct inode *i, struct file *f)
-{
-    return 0;
-}
-
-int buffer_driver_close(struct inode *i, struct file *f)
-{
-    return 0;
-}
-
-static struct file_operations buffer_driver_fops =
+buffer_driver_fops =
     {
         .owner = THIS_MODULE,
-        // .read = buffer_driver_read,
-        // .write = buffer_driver_write,
-        .open = buffer_driver_open,
-        .release = buffer_driver_close,
+        .read = buffer_driver_read,
+        .write = buffer_driver_write,
 };
 
 module_init(buffer_init);
